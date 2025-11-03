@@ -5,47 +5,90 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>القنوات المسموح بها</title>
   <style>
-    body{font-family:Arial,Helvetica,sans-serif;direction:rtl;text-align:center;padding:16px;background:#f0f2f5}
-    .card{background:#fff;padding:12px;margin:14px 0;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,0.06)}
-    iframe{width:100%;height:480px;border-radius:6px;border:0}
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      direction: rtl;
+      text-align: center;
+      padding: 16px;
+      background: #f0f2f5;
+    }
+    .card {
+      background: #fff;
+      padding: 12px;
+      margin: 14px 0;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    }
+    iframe {
+      width: 100%;
+      height: 480px;
+      border-radius: 6px;
+      border: 0;
+    }
+    h3 { margin: 8px 0; font-size: 16px; }
+    #videos.loading { color: #555; font-size: 18px; }
   </style>
 </head>
 <body>
   <h1>📺 القنوات المسموح بها فقط</h1>
-  <div id="videos">جاري تحميل الفيديوهات...</div>
+  <div id="videos" class="loading">⏳ جاري تحميل الفيديوهات...</div>
 
 <script>
-const API_KEY = "AIzaSyA_b_Pqa_iSTVUIsoEQG_sCw8S90CcvuXA"; // ← حط مفتاحك هنا
+const API_KEY = "AIzaSyA_b_Pqa_iSTVUIsoEQG_sCw8S90CcvuXA"; // المفتاح الجديد
 
-// معرفات القنوات (Channel IDs)
 const CHANNEL_IDS = [
-  "UCN6hQCg6tIs5x6CoYLwXlhQ", // Gohary
-  "UCMmiGP6imlrwLP3oy34wbxA", // GehadAshraf-zq7gh
-  "UCdur25RCItdfoXA89ORWSkw", // mohamedsalah.bassthalk
-  "UCGLqLYzjWYuPTUhC9QireWg", // Abu-Elela
-  "UClvucpj2qZ3OUM2not9YVpA", // khaledsakr8181
-  "UCwbUIqOxivtwVkSA8Cm87jA", // doctor.physics
-  "UCYTe2pbx_83PMClEm7JZQCA", // MoreEnglish88
-  "UChGiPYEm5gLRwFmKPVrk-_Q", // alisayed2010
-  "UCOKKttQBUqmenmwur2a57Jg", // EnglishFull88
-  "UCSvnSxC5f1W8ogXMC38IbzA"  // drtahasalah
+  "UCN6hQCg6tIs5x6CoYLwXlhQ",
+  "UCMmiGP6imlrwLP3oy34wbxA",
+  "UCdur25RCItdfoXA89ORWSkw",
+  "UCGLqLYzjWYuPTUhC9QireWg",
+  "UClvucpj2qZ3OUM2not9YVpA",
+  "UCwbUIqOxivtwVkSA8Cm87jA",
+  "UCYTe2pbx_83PMClEm7JZQCA",
+  "UChGiPYEm5gLRwFmKPVrk-_Q",
+  "UCOKKttQBUqmenmwur2a57Jg",
+  "UCSvnSxC5f1W8ogXMC38IbzA"
 ];
 
+let allVideos = [];
+
 async function fetchVideos() {
-  const all = [];
-  for (const id of CHANNEL_IDS) {
-    const res = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${id}&order=date&type=video&maxResults=5&key=${API_KEY}`);
-    const data = await res.json();
-    if (data.items) all.push(...data.items);
+  const container = document.getElementById("videos");
+  container.classList.add("loading");
+  container.innerHTML = "⏳ جاري تحميل الفيديوهات...";
+  
+  try {
+    const all = [];
+    for (const id of CHANNEL_IDS) {
+      const res = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${id}&order=date&type=video&maxResults=5&key=${API_KEY}`);
+      const data = await res.json();
+      if (data.items && data.items.length) {
+        all.push(...data.items.filter(v => v.id && v.id.videoId));
+      }
+    }
+    allVideos = all;
+    renderVideos(all);
+  } catch(err) {
+    container.innerHTML = "❌ حدث خطأ أثناء تحميل الفيديوهات.";
+    console.error(err);
   }
-  const videos = all.map(v => `
+}
+
+function renderVideos(videos) {
+  const container = document.getElementById("videos");
+  if (!videos.length) {
+    container.innerHTML = "⚠️ لم يتم العثور على فيديوهات، تحقق من المفتاح أو القنوات.";
+    return;
+  }
+  const html = videos.map(v => `
     <div class="card">
       <h3>${v.snippet.title}</h3>
       <iframe src="https://www.youtube-nocookie.com/embed/${v.id.videoId}?rel=0" allowfullscreen></iframe>
     </div>
   `).join('');
-  document.getElementById("videos").innerHTML = videos || "❌ لم يتم العثور على فيديوهات، تحقق من المفتاح أو القنوات.";
+  container.classList.remove("loading");
+  container.innerHTML = html;
 }
+
 fetchVideos();
 </script>
 </body>
