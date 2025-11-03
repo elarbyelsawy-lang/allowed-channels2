@@ -69,18 +69,18 @@
 <script>
 const API_KEY = "AIzaSyDFqz7ug9Dr2r6o8_LB6cbIxJjtZnHV10c";
 
-// ✅ معرفات القنوات (Channel IDs)
+// معرفات القنوات
 const CHANNEL_IDS = [
-  "UCN6hQCg6tIs5x6CoYLwXlhQ", // Gohary
-  "UCMmiGP6imlrwLP3oy34wbxA", // GehadAshraf-zq7gh
-  "UCdur25RCItdfoXA89ORWSkw", // mohamedsalah.bassthalk
-  "UCGLqLYzjWYuPTUhC9QireWg", // Abu-Elela
-  "UClvucpj2qZ3OUM2not9YVpA", // khaledsakr8181
-  "UCwbUIqOxivtwVkSA8Cm87jA", // doctor.physics
-  "UCYTe2pbx_83PMClEm7JZQCA", // MoreEnglish88
-  "UChGiPYEm5gLRwFmKPVrk-_Q", // alisayed2010
-  "UCOKKttQBUqmenmwur2a57Jg", // EnglishFull88
-  "UCSvnSxC5f1W8ogXMC38IbzA"  // drtahasalah
+  "UCN6hQCg6tIs5x6CoYLwXlhQ",
+  "UCMmiGP6imlrwLP3oy34wbxA",
+  "UCdur25RCItdfoXA89ORWSkw",
+  "UCGLqLYzjWYuPTUhC9QireWg",
+  "UClvucpj2qZ3OUM2not9YVpA",
+  "UCwbUIqOxivtwVkSA8Cm87jA",
+  "UCYTe2pbx_83PMClEm7JZQCA",
+  "UChGiPYEm5gLRwFmKPVrk-_Q",
+  "UCOKKttQBUqmenmwur2a57Jg",
+  "UCSvnSxC5f1W8ogXMC38IbzA"
 ];
 
 let allVideos = [];
@@ -90,14 +90,18 @@ async function fetchVideos() {
   try {
     const all = [];
     for (const id of CHANNEL_IDS) {
-      const res = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${id}&order=date&type=video&maxResults=10&key=${API_KEY}`);
+      const res = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${id}&order=date&type=video&maxResults=5&key=${API_KEY}`);
       const data = await res.json();
-      if (data.items) all.push(...data.items);
+      if (data.items) {
+        const valid = data.items.filter(v => v.id && v.id.videoId);
+        all.push(...valid);
+      }
     }
     allVideos = all;
     renderVideos(all);
   } catch (err) {
     document.getElementById("videos").innerHTML = "❌ حدث خطأ أثناء تحميل الفيديوهات.";
+    console.error(err);
   }
 }
 
@@ -106,12 +110,13 @@ function renderVideos(videos) {
     document.getElementById("videos").innerHTML = "⚠️ لم يتم العثور على فيديوهات.";
     return;
   }
-  document.getElementById("videos").innerHTML = videos.map(v => `
+  const html = videos.map(v => `
     <div class="card">
       <h3>${v.snippet.title}</h3>
       <iframe src="https://www.youtube-nocookie.com/embed/${v.id.videoId}?rel=0" allowfullscreen></iframe>
     </div>
   `).join('');
+  document.getElementById("videos").innerHTML = html;
 }
 
 function filterVideos() {
