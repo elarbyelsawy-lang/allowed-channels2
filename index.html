@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>القنوات المسموح بها</title>
+  <title>قناة KhaliDasEC0</title>
   <style>
     body {
       font-family: Arial, Helvetica, sans-serif;
@@ -30,26 +30,12 @@
   </style>
 </head>
 <body>
-  <h1>📺 القنوات المسموح بها فقط</h1>
+  <h1>📺 قناة KhaliDasEC0</h1>
   <div id="videos" class="loading">⏳ جاري تحميل الفيديوهات...</div>
 
 <script>
-const API_KEY = "AIzaSyA_b_Pqa_iSTVUIsoEQG_sCw8S90CcvuXA"; // المفتاح الجديد
-
-const CHANNEL_IDS = [
-  "UCN6hQCg6tIs5x6CoYLwXlhQ",
-  "UCMmiGP6imlrwLP3oy34wbxA",
-  "UCdur25RCItdfoXA89ORWSkw",
-  "UCGLqLYzjWYuPTUhC9QireWg",
-  "UClvucpj2qZ3OUM2not9YVpA",
-  "UCwbUIqOxivtwVkSA8Cm87jA",
-  "UCYTe2pbx_83PMClEm7JZQCA",
-  "UChGiPYEm5gLRwFmKPVrk-_Q",
-  "UCOKKttQBUqmenmwur2a57Jg",
-  "UCSvnSxC5f1W8ogXMC38IbzA"
-];
-
-let allVideos = [];
+const API_KEY = "AIzaSyA_b_Pqa_iSTVUIsoEQG_sCw8S90CcvuXA";
+const CHANNEL_ID = "UC1FECopYxeTtlWMgDBYQNlg";
 
 async function fetchVideos() {
   const container = document.getElementById("videos");
@@ -57,36 +43,31 @@ async function fetchVideos() {
   container.innerHTML = "⏳ جاري تحميل الفيديوهات...";
   
   try {
-    const all = [];
-    for (const id of CHANNEL_IDS) {
-      const res = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${id}&order=date&type=video&maxResults=5&key=${API_KEY}`);
-      const data = await res.json();
-      if (data.items && data.items.length) {
-        all.push(...data.items.filter(v => v.id && v.id.videoId));
-      }
+    const res = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${CHANNEL_ID}&order=date&type=video&maxResults=5&key=${API_KEY}`);
+    const data = await res.json();
+
+    if (!data.items || data.items.length === 0) {
+      container.innerHTML = "⚠️ لم يتم العثور على فيديوهات، تحقق من القناة أو المفتاح.";
+      return;
     }
-    allVideos = all;
-    renderVideos(all);
+
+    const html = data.items
+      .filter(v => v.id && v.id.videoId)
+      .map(v => `
+        <div class="card">
+          <h3>${v.snippet.title}</h3>
+          <iframe src="https://www.youtube-nocookie.com/embed/${v.id.videoId}?rel=0" allowfullscreen></iframe>
+        </div>
+      `)
+      .join('');
+
+    container.classList.remove("loading");
+    container.innerHTML = html;
+
   } catch(err) {
     container.innerHTML = "❌ حدث خطأ أثناء تحميل الفيديوهات.";
     console.error(err);
   }
-}
-
-function renderVideos(videos) {
-  const container = document.getElementById("videos");
-  if (!videos.length) {
-    container.innerHTML = "⚠️ لم يتم العثور على فيديوهات، تحقق من المفتاح أو القنوات.";
-    return;
-  }
-  const html = videos.map(v => `
-    <div class="card">
-      <h3>${v.snippet.title}</h3>
-      <iframe src="https://www.youtube-nocookie.com/embed/${v.id.videoId}?rel=0" allowfullscreen></iframe>
-    </div>
-  `).join('');
-  container.classList.remove("loading");
-  container.innerHTML = html;
 }
 
 fetchVideos();
